@@ -33,7 +33,7 @@ module.exports = {
         var hasher = require("password-hash");
         password = hasher.generate(password);
 
-        Users.create({ username: username, password: password })
+        Users.create({ username: username, password: password, photoUrl: null, twitterUsername: null })
         .done(function signupCreatUser(error, user) {
           if (error) {
             // Set the error header
@@ -68,6 +68,11 @@ module.exports = {
           var hasher = require("password-hash");
           if (hasher.verify(password, usr.password)) {
             req.session.user = usr;
+
+            CurrentUsers.create(usr.toObject()).done(function(error, user) {
+                CurrentUsers.publishCreate(usr.toObject());
+            });
+
             res.send(usr);
           } else {
             // Set the error header
@@ -82,9 +87,31 @@ module.exports = {
     });
   },
 
+  logout: function (req, res) {
+    if (req.session.user) {
+        var username = req.session.user.username;
+        req.session.user = null;
+
+        CurrentUsers.findOneByUsername(username).done(function(err, usr){
+            if (err) {
+                res.set('error', 'DB Error');
+                res.send(500, { error: "DB Error" });
+            } else {
+                if (usr) {
+                    usr.destroy(function(e){
+                        CurrentUsers.publishDestroy(usr.id);
+                    });
+                }
+            }
+        });
+    }
+    res.redirect('/');
+  },
+
   chat: function (req, res) {
     if (req.session.user) {
-      res.view({ username: req.session.user.username });
+      var username = req.session.user.username;
+      res.view({ username: username });
     } else {
       res.redirect('/');
     }

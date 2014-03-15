@@ -10,7 +10,9 @@ module.exports = {
 
   attributes: {
     username: 'STRING',
-    password: 'STRING'
+    password: 'STRING',
+    photoUrl: 'STRING',
+    twitterUsername: 'STRING'
   }
 
 };

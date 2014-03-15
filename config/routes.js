@@ -42,6 +42,7 @@ module.exports.routes = {
   '/signup': 'MainController.signup',
 
   '/login': 'MainController.login',
+  '/logout': 'MainController.logout',
 
   '/chat': 'MainController.chat',
 

@@ -1,13 +1,29 @@
 <h2>Welcome <%= username %></h2>
+<style type="text/css">
+    #flexContainer { display: flex; }
+    #messagesContainer { flex-flow: row wrap; min-width: 200px; }
+    #messagesContainer div {  }
+    #usersWrapper { flex-flow: row wrap; }
+    img.photo { width: 40px; vertical-align: top}
+</style>
 <div id="newMessageForm">
     <textarea id="message" placeholder="Enter your message here:"></textarea>
     <button id="postMessageButton">Add Message</button>
 </div>
-<div id="messagesContainer">
+<div id="flexContainer">
+    <div id="messagesContainer"></div>
+    <div id="usersWrapper">
+        <h4>Users</h4>
+        <div id="usersContainer"></div>
+    </div>
 </div>
 <script>
     var MessageModel = Backbone.Model.extend({
-        urlRoot: '/messages',
+        urlRoot: '/messages'
+    });
+
+    var CurrrentUserModel = Backbone.Model.extend({
+        urlRoot: '/currentUsers'
     });
 
     var SailsCollection = Backbone.Collection.extend({
@@ -23,23 +39,20 @@
             if(typeof this.sailsCollection === "string" && this.sailsCollection !== "") {
                 this.socket = io.connect();
                 this.socket.on("connect", _.bind(function(){
-                    this.socket.request("/" + this.sailsCollection, where, _.bind(function(users){
-                        this.set(users);
+                    this.socket.request("/" + this.sailsCollection, where, _.bind(function(objs){
+                        this.set(objs);
                     }, this));
 
                     this.socket.on("message", _.bind(function(msg){
-                        // var m = msg.uri.split("/").pop();
-                        // In v0.9.0 the REST method is now stored in the messages verb property
-                        var m = msg.verb;
-                        if (m === "create") {
-                            this.add(msg.data);
-                        } else if (m === "update") {
-                            // this.get(msg.data.id).set(msg.data);
-                            // In v0.9.0 the message id property is no longer stored in the data object.
-                            this.get(msg.id).set(msg.data);
-                        } else if (m === "destroy") {
-                            // this.remove(this.get(msg.data.id));
-                            this.remove(this.get(msg.id));
+                        if (msg.model == this.sailsCollection.toLowerCase()) {
+                            var m = msg.verb;
+                            if (m === "create") {
+                                this.add(msg.data);
+                            } else if (m === "update") {
+                                this.get(msg.id).set(msg.data);
+                            } else if (m === "destroy") {
+                                this.remove(this.get(msg.id));
+                            }
                         }
                     }, this));
                 }, this));
@@ -51,8 +64,16 @@
 
     var MessageCollection = SailsCollection.extend({
         sailsCollection: 'messages',
-        model: MessageModel,
+        model: MessageModel
     });
+
+    var CurrentUserCollection = SailsCollection.extend({
+        sailsCollection: 'currentUsers',
+        model: CurrrentUserModel
+    });
+
+    var users = new CurrentUserCollection();
+    users.fetch();
 
     var messages = new MessageCollection();
     messages.fetch();
@@ -83,4 +104,22 @@
     });
 
     var mView = new MessagesView({collection: messages});
+
+    var UsersView = Backbone.View.extend({
+        el: '#usersContainer',
+        initialize: function () {
+            this.collection.on('add', this.render, this);
+            this.collection.on('remove', this.render, this);
+            this.render();
+        },
+        template: _.template("<div><img class=\"photo\" src=\"{{ photoUrl || '/images/nophoto.png' }}\" /><b>{{ username }} </b></div>"),
+        render: function () {
+            this.$el.html("");
+            this.collection.each(function(user){
+                this.$el.append(this.template(user.toJSON()));
+            }, this)
+        }
+    });
+
+    var uView = new UsersView({collection: users});
 </script>
