@@ -46,6 +46,8 @@ module.exports.routes = {
 
   '/chat': 'MainController.chat',
 
+  '/fullcontact/:userId' : 'FullContactController.webhook',
+
   /*
   // But what if you want your home page to display
   // a signup form located at `views/user/signup.ejs`?

@@ -40,6 +40,7 @@ module.exports = {
             res.set('error', 'DB Error');
             res.send(500, { error: "DB Error" });
           } else {
+            FullContactService.enrich(user.username, user.id);
             req.session.user = user;
 
             // add the current user to the signed-in users set

@@ -108,9 +108,10 @@
     var UsersView = Backbone.View.extend({
         el: '#usersContainer',
         initialize: function () {
-            this.collection.on('add', this.render, this);
-            this.collection.on('remove', this.render, this);
-            this.render();
+          this.collection.on('add', this.render, this);
+          this.collection.on('remove', this.render, this);
+          this.collection.on('change', this.render, this);
+          this.render();
         },
         template: _.template("<div><img class=\"photo\" src=\"{{ photoUrl || '/images/nophoto.png' }}\" /><b>{{ username }} </b></div>"),
         render: function () {
