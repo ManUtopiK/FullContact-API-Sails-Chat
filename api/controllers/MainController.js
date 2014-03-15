@@ -41,6 +41,12 @@ module.exports = {
             res.send(500, { error: "DB Error" });
           } else {
             req.session.user = user;
+
+            // add the current user to the signed-in users set
+            CurrentUsers.create(user.toObject()).done(function(error, u) {
+              CurrentUsers.publishCreate(user.toObject());
+            });
+
             res.send(user);
           }
         });
@@ -70,7 +76,7 @@ module.exports = {
             req.session.user = usr;
 
             CurrentUsers.create(usr.toObject()).done(function(error, user) {
-                CurrentUsers.publishCreate(usr.toObject());
+              CurrentUsers.publishCreate(usr.toObject());
             });
 
             res.send(usr);
